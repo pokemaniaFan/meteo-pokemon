@@ -1,0 +1,2606 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Météo + Pokémon World</title>
+
+
+    <!-- =====================================================
+         LEAFLET
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            min-height: 100vh;
+
+            color: white;
+
+            padding: 30px 20px;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    #4d7cff,
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #101936,
+                    #1d3970
+                );
+        }
+
+
+        .app {
+
+            max-width: 1200px;
+
+            margin: auto;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ====================================================== */
+
+        header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 20px;
+
+            margin-bottom: 30px;
+        }
+
+
+        .label {
+
+            color: #a9c0f5;
+
+            font-size: 13px;
+
+            letter-spacing: 2px;
+
+            font-weight: bold;
+        }
+
+
+        h1 {
+
+            font-size: 40px;
+
+            margin: 5px 0;
+        }
+
+
+        .date {
+
+            color: #b9c5df;
+        }
+
+
+        .search {
+
+            display: flex;
+
+            padding: 5px;
+
+            border-radius: 14px;
+
+            background: rgba(255,255,255,.1);
+        }
+
+
+        .search input {
+
+            width: 230px;
+
+            padding: 12px;
+
+            border: none;
+
+            outline: none;
+
+            background: transparent;
+
+            color: white;
+
+            font-size: 15px;
+        }
+
+
+        .search input::placeholder {
+
+            color: #aab7d4;
+        }
+
+
+        .search button {
+
+            border: none;
+
+            border-radius: 10px;
+
+            padding: 0 17px;
+
+            background: #527dff;
+
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+        }
+
+
+        /* =====================================================
+           MÉTÉO ACTUELLE
+        ====================================================== */
+
+        .current {
+
+            text-align: center;
+
+            padding: 40px;
+
+            border-radius: 25px;
+
+            background: rgba(255,255,255,.09);
+
+            border:
+                1px solid
+                rgba(255,255,255,.1);
+
+            backdrop-filter: blur(15px);
+        }
+
+
+        .weather-icon {
+
+            font-size: 75px;
+        }
+
+
+        .temperature {
+
+            font-size: 90px;
+
+            font-weight: bold;
+
+            margin: 5px 0;
+        }
+
+
+        .condition {
+
+            font-size: 24px;
+        }
+
+
+        .updated {
+
+            color: #aab8d6;
+
+            margin-top: 10px;
+
+            font-size: 14px;
+        }
+
+
+        /* =====================================================
+           DETAILS
+        ====================================================== */
+
+        .details {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 15px;
+
+            margin-top: 25px;
+        }
+
+
+        .card {
+
+            padding: 20px;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,.07);
+        }
+
+
+        .card p {
+
+            color: #aebbd7;
+
+            margin-bottom: 8px;
+        }
+
+
+        .card strong {
+
+            font-size: 19px;
+        }
+
+
+        /* =====================================================
+           PRÉVISIONS
+        ====================================================== */
+
+        .title {
+
+            margin: 35px 0 15px;
+
+            font-size: 24px;
+        }
+
+
+        .forecast {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(7, 1fr);
+
+            gap: 10px;
+        }
+
+
+        .day {
+
+            text-align: center;
+
+            padding: 20px 8px;
+
+            border-radius: 17px;
+
+            background:
+                rgba(255,255,255,.07);
+        }
+
+
+        .day-name {
+
+            font-weight: bold;
+
+            margin-bottom: 15px;
+        }
+
+
+        .day-icon {
+
+            font-size: 34px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .max {
+
+            font-size: 19px;
+
+            font-weight: bold;
+        }
+
+
+        .min {
+
+            color: #8f9dbc;
+
+            margin-top: 5px;
+        }
+
+
+        .rain {
+
+            color: #9fc6ff;
+
+            font-size: 12px;
+
+            margin-top: 8px;
+        }
+
+
+        /* =====================================================
+           SECTION POKÉMON
+        ====================================================== */
+
+        .pokemon-section {
+
+            margin-top: 45px;
+        }
+
+
+        .pokemon-subtitle {
+
+            color: #b9c5df;
+
+            margin-bottom: 15px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           CARTE
+        ====================================================== */
+
+        #pokemonMap {
+
+            width: 100%;
+
+            height: 650px;
+
+            border-radius: 25px;
+
+            overflow: hidden;
+
+            border:
+                2px solid
+                rgba(255,255,255,.2);
+
+            box-shadow:
+                0 20px 50px
+                rgba(0,0,0,.45);
+        }
+
+
+        .leaflet-container {
+
+            font-family: Arial, sans-serif;
+        }
+
+
+        /* =====================================================
+           MARQUEUR POKÉMON
+        ====================================================== */
+
+        .pokemon-marker {
+
+            width: 52px;
+
+            height: 52px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(20,30,60,.96);
+
+            border:
+                3px solid white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            box-shadow:
+                0 5px 15px
+                rgba(0,0,0,.6);
+
+            transition:
+                transform .2s;
+        }
+
+
+        .pokemon-marker:hover {
+
+            transform: scale(1.25);
+        }
+
+
+        .pokemon-marker img {
+
+            width: 44px;
+
+            height: 44px;
+
+            object-fit: contain;
+
+            image-rendering: auto;
+        }
+
+
+        /* =====================================================
+           PSYKOKWAK SPÉCIAL
+        ====================================================== */
+
+        .pokemon-marker.special {
+
+            width: 76px;
+
+            height: 76px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffe85c,
+                    #dca82d
+                );
+
+            border:
+                4px solid #ffd83d;
+
+            box-shadow:
+                0 0 15px #ffd83d,
+                0 0 30px #ffd83d,
+                0 0 55px
+                rgba(255,216,61,.9);
+
+            animation:
+                psyduckFloat 2s infinite;
+        }
+
+
+        .pokemon-marker.special img {
+
+            width: 65px;
+
+            height: 65px;
+        }
+
+
+        @keyframes psyduckFloat {
+
+            0% {
+                transform:
+                    translateY(0)
+                    rotate(-3deg);
+            }
+
+            50% {
+                transform:
+                    translateY(-8px)
+                    rotate(3deg);
+            }
+
+            100% {
+                transform:
+                    translateY(0)
+                    rotate(-3deg);
+            }
+        }
+
+
+        /* =====================================================
+           POPUP
+        ====================================================== */
+
+        .pokemon-popup {
+
+            text-align: center;
+
+            min-width: 210px;
+
+            color: #18213d;
+        }
+
+
+        .pokemon-popup img {
+
+            width: 120px;
+
+            height: 120px;
+
+            object-fit: contain;
+        }
+
+
+        .pokemon-popup h2 {
+
+            margin: 5px 0 12px;
+
+            color: #17213d;
+        }
+
+
+        .pokemon-popup p {
+
+            margin: 7px 0;
+
+            color: #34405c;
+        }
+
+
+        .pokemon-type {
+
+            display: inline-block;
+
+            padding: 5px 10px;
+
+            border-radius: 20px;
+
+            margin: 3px;
+
+            color: white;
+
+            font-size: 12px;
+
+            font-weight: bold;
+        }
+
+
+        .type-feu {
+            background: #ef5350;
+        }
+
+
+        .type-eau {
+            background: #42a5f5;
+        }
+
+
+        .type-plante {
+            background: #66bb6a;
+        }
+
+
+        .type-electrik {
+            background: #fbc02d;
+            color: #333;
+        }
+
+
+        .type-normal {
+            background: #9e9e9e;
+        }
+
+
+        .type-vol {
+            background: #7e57c2;
+        }
+
+
+        .type-psy {
+            background: #ec407a;
+        }
+
+
+        .type-glace {
+            background: #26c6da;
+        }
+
+
+        .type-sol {
+            background: #a1887f;
+        }
+
+
+        .type-roche {
+            background: #795548;
+        }
+
+
+        .type-poison {
+            background: #8e44ad;
+        }
+
+
+        .type-insecte {
+            background: #7cb342;
+        }
+
+
+        .type-combat {
+            background: #d84315;
+        }
+
+
+        .type-spectre {
+            background: #5e35b1;
+        }
+
+
+        .type-acier {
+            background: #607d8b;
+        }
+
+
+        .type-tenebres {
+            background: #263238;
+        }
+
+
+        .type-dragon {
+            background: #3949ab;
+        }
+
+
+        .type-fee {
+            background: #ec9bad;
+        }
+
+
+        /* =====================================================
+           LÉGENDE
+        ====================================================== */
+
+        .map-info {
+
+            margin-top: 12px;
+
+            padding: 12px 15px;
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,.07);
+
+            color: #b9c5df;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           ERREUR
+        ====================================================== */
+
+        .error {
+
+            text-align: center;
+
+            color: #ffb6b6;
+
+            margin-top: 20px;
+        }
+
+
+        .source {
+
+            text-align: center;
+
+            color: #8e9dbc;
+
+            font-size: 13px;
+
+            margin: 25px 0;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ====================================================== */
+
+        @media (max-width: 800px) {
+
+            header {
+
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+
+            .search input {
+
+                width: 100%;
+            }
+
+
+            .details {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .forecast {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+
+            .temperature {
+
+                font-size: 70px;
+            }
+
+
+            #pokemonMap {
+
+                height: 500px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header>
+
+        <div>
+
+            <p class="label">
+                MÉTÉO
+            </p>
+
+            <h1 id="city">
+                Lausanne
+            </h1>
+
+            <p
+                class="date"
+                id="date"
+            >
+                Chargement...
+            </p>
+
+        </div>
+
+
+        <div class="search">
+
+            <input
+                id="search"
+                type="text"
+                placeholder="Rechercher une ville..."
+            >
+
+            <button id="searchButton">
+                🔍
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MÉTÉO ACTUELLE
+    ====================================================== -->
+
+    <section class="current">
+
+        <div
+            class="weather-icon"
+            id="icon"
+        >
+            🌤️
+        </div>
+
+
+        <div class="temperature">
+
+            <span id="temperature">
+                --
+            </span>
+
+            °C
+
+        </div>
+
+
+        <div
+            class="condition"
+            id="condition"
+        >
+            Chargement...
+        </div>
+
+
+        <p class="updated">
+
+            Mise à jour :
+
+            <span id="updated">
+                --
+            </span>
+
+        </p>
+
+    </section>
+
+
+    <!-- =====================================================
+         DETAILS
+    ====================================================== -->
+
+    <section class="details">
+
+
+        <div class="card">
+
+            <p>
+                💧 Humidité
+            </p>
+
+            <strong id="humidity">
+                -- %
+            </strong>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>
+                💨 Vent
+            </p>
+
+            <strong id="wind">
+                -- km/h
+            </strong>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>
+                🌡️ Ressenti
+            </p>
+
+            <strong id="feels">
+                -- °C
+            </strong>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>
+                🌧️ Pluie
+            </p>
+
+            <strong id="rain">
+                -- mm
+            </strong>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         PRÉVISIONS
+    ====================================================== -->
+
+    <h2 class="title">
+        Prévisions
+    </h2>
+
+
+    <section
+        class="forecast"
+        id="forecast"
+    ></section>
+
+
+    <!-- =====================================================
+         POKÉMON WORLD
+    ====================================================== -->
+
+    <section class="pokemon-section">
+
+        <h2 class="title">
+            🌍 Pokémon World
+        </h2>
+
+
+        <p class="pokemon-subtitle">
+
+            Explore la vraie carte du monde.
+            Les Pokémon sont placés dans différentes régions
+            selon leur environnement.
+            Certains apparaissent en groupe !
+
+            <br>
+
+            ⭐ Le Psykokwak doré est le Pokémon spécial de Lausanne.
+
+        </p>
+
+
+        <div id="pokemonMap"></div>
+
+
+        <div class="map-info">
+
+            🗺️ Carte :
+            OpenStreetMap
+
+            &nbsp;•&nbsp;
+
+            🔴 Clique sur un Pokémon
+            pour voir ses informations.
+
+            &nbsp;•&nbsp;
+
+            🖱️ Tu peux zoomer et déplacer la carte.
+
+        </div>
+
+    </section>
+
+
+    <p
+        class="error"
+        id="error"
+    ></p>
+
+
+    <p class="source">
+
+        Données météo :
+        Open-Meteo · modèle MeteoSwiss
+
+        <br>
+
+        Carte :
+        OpenStreetMap · Leaflet
+
+        <br>
+
+        Pokémon :
+        données et sprites Pokémon
+
+    </p>
+
+
+</div>
+
+
+<!-- =====================================================
+     LEAFLET JS
+====================================================== -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+
+/* =========================================================
+   VARIABLES MÉTÉO
+========================================================= */
+
+let latitude = 46.5197;
+
+let longitude = 6.6323;
+
+
+/* =========================================================
+   CODES MÉTÉO
+========================================================= */
+
+function weatherInfo(code) {
+
+    if (code === 0)
+        return ["☀️", "Ciel dégagé"];
+
+    if (code === 1)
+        return ["🌤️", "Principalement dégagé"];
+
+    if (code === 2)
+        return ["⛅", "Partiellement nuageux"];
+
+    if (code === 3)
+        return ["☁️", "Couvert"];
+
+    if (
+        code === 45 ||
+        code === 48
+    )
+        return ["🌫️", "Brouillard"];
+
+    if (
+        code >= 51 &&
+        code <= 57
+    )
+        return ["🌦️", "Bruine"];
+
+    if (
+        code >= 61 &&
+        code <= 67
+    )
+        return ["🌧️", "Pluie"];
+
+    if (
+        code >= 71 &&
+        code <= 77
+    )
+        return ["❄️", "Neige"];
+
+    if (
+        code >= 80 &&
+        code <= 82
+    )
+        return ["🌦️", "Averses"];
+
+    if (code >= 95)
+        return ["⛈️", "Orage"];
+
+    return ["🌤️", "Variable"];
+}
+
+
+/* =========================================================
+   CHARGER MÉTÉO
+========================================================= */
+
+async function loadWeather() {
+
+    const error =
+        document.getElementById("error");
+
+    error.textContent = "";
+
+
+    try {
+
+        const url =
+            "https://api.open-meteo.com/v1/forecast" +
+
+            "?latitude=" +
+            latitude +
+
+            "&longitude=" +
+            longitude +
+
+            "&current=" +
+            "temperature_2m," +
+            "relative_humidity_2m," +
+            "apparent_temperature," +
+            "precipitation," +
+            "weather_code," +
+            "wind_speed_10m" +
+
+            "&daily=" +
+            "weather_code," +
+            "temperature_2m_max," +
+            "temperature_2m_min," +
+            "precipitation_sum" +
+
+            "&forecast_days=7" +
+
+            "&timezone=Europe%2FZurich" +
+
+            "&models=meteoswiss_icon_seamless";
+
+
+        const response =
+            await fetch(url);
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.reason ||
+                "Impossible de récupérer la météo."
+            );
+        }
+
+
+        const current =
+            data.current;
+
+
+        const info =
+            weatherInfo(
+                current.weather_code
+            );
+
+
+        document.getElementById(
+            "temperature"
+        ).textContent =
+            Math.round(
+                current.temperature_2m
+            );
+
+
+        document.getElementById(
+            "humidity"
+        ).textContent =
+            current.relative_humidity_2m +
+            " %";
+
+
+        document.getElementById(
+            "wind"
+        ).textContent =
+            Math.round(
+                current.wind_speed_10m
+            ) +
+            " km/h";
+
+
+        document.getElementById(
+            "feels"
+        ).textContent =
+            Math.round(
+                current.apparent_temperature
+            ) +
+            " °C";
+
+
+        document.getElementById(
+            "rain"
+        ).textContent =
+            current.precipitation +
+            " mm";
+
+
+        document.getElementById(
+            "icon"
+        ).textContent =
+            info[0];
+
+
+        document.getElementById(
+            "condition"
+        ).textContent =
+            info[1];
+
+
+        document.getElementById(
+            "updated"
+        ).textContent =
+            current.time.replace(
+                "T",
+                " "
+            );
+
+
+        document.getElementById(
+            "date"
+        ).textContent =
+            new Date().toLocaleDateString(
+                "fr-FR",
+                {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+
+        /* =====================================================
+           PRÉVISIONS
+        ===================================================== */
+
+        const forecast =
+            document.getElementById(
+                "forecast"
+            );
+
+
+        forecast.innerHTML = "";
+
+
+        for (
+            let i = 0;
+            i < Math.min(
+                data.daily.time.length,
+                7
+            );
+            i++
+        ) {
+
+            const date =
+                new Date(
+                    data.daily.time[i] +
+                    "T12:00:00"
+                );
+
+
+            const dayName =
+                i === 0
+                    ? "Aujourd'hui"
+                    : date.toLocaleDateString(
+                        "fr-FR",
+                        {
+                            weekday: "short"
+                        }
+                    );
+
+
+            const dayInfo =
+                weatherInfo(
+                    data.daily.weather_code[i]
+                );
+
+
+            const max =
+                data.daily
+                    .temperature_2m_max[i];
+
+
+            const min =
+                data.daily
+                    .temperature_2m_min[i];
+
+
+            const rain =
+                data.daily
+                    .precipitation_sum[i];
+
+
+            const day =
+                document.createElement(
+                    "div"
+                );
+
+
+            day.className = "day";
+
+
+            day.innerHTML = `
+
+                <div class="day-name">
+                    ${dayName}
+                </div>
+
+                <div class="day-icon">
+                    ${dayInfo[0]}
+                </div>
+
+                <div class="max">
+                    ${
+                        max !== null
+                            ? Math.round(max) + "°C"
+                            : "--"
+                    }
+                </div>
+
+                <div class="min">
+                    ${
+                        min !== null
+                            ? Math.round(min) + "°C"
+                            : "--"
+                    }
+                </div>
+
+                <div class="rain">
+                    💧
+                    ${
+                        rain !== null
+                            ? rain + " mm"
+                            : "--"
+                    }
+                </div>
+
+            `;
+
+
+            forecast.appendChild(day);
+        }
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        error.textContent =
+            "Erreur : " +
+            err.message;
+    }
+}
+
+
+/* =========================================================
+   RECHERCHE VILLE
+========================================================= */
+
+async function searchCity() {
+
+    const input =
+        document.getElementById(
+            "search"
+        );
+
+
+    const city =
+        input.value.trim();
+
+
+    if (!city)
+        return;
+
+
+    try {
+
+        const response =
+            await fetch(
+                "https://geocoding-api.open-meteo.com/v1/search" +
+                "?name=" +
+                encodeURIComponent(city) +
+                "&count=1" +
+                "&language=fr" +
+                "&format=json"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !data.results ||
+            data.results.length === 0
+        ) {
+
+            throw new Error(
+                "Ville introuvable."
+            );
+        }
+
+
+        latitude =
+            data.results[0].latitude;
+
+
+        longitude =
+            data.results[0].longitude;
+
+
+        document.getElementById(
+            "city"
+        ).textContent =
+            data.results[0].name;
+
+
+        loadWeather();
+
+    }
+
+    catch (err) {
+
+        document.getElementById(
+            "error"
+        ).textContent =
+            err.message;
+    }
+}
+
+
+/* =========================================================
+   BOUTONS RECHERCHE
+========================================================= */
+
+document
+    .getElementById(
+        "searchButton"
+    )
+    .addEventListener(
+        "click",
+        searchCity
+    );
+
+
+document
+    .getElementById(
+        "search"
+    )
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                searchCity();
+            }
+        }
+    );
+
+
+/* =========================================================
+   CARTE OPENSTREETMAP
+========================================================= */
+
+const pokemonMap =
+    L.map(
+        "pokemonMap"
+    ).setView(
+        [20, 10],
+        2
+    );
+
+
+L.tileLayer(
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+
+        maxZoom: 19,
+
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+
+    }
+).addTo(
+    pokemonMap
+);
+
+
+/* =========================================================
+   DONNÉES POKÉMON
+=========================================================
+
+   id = numéro Pokédex
+
+   gen = génération
+
+   lat/lon = position sur la carte
+
+   Plusieurs Pokémon peuvent avoir exactement
+   la même zone pour créer des groupes.
+========================================================= */
+
+const pokemonLocations = [
+
+    /* =====================================================
+       🇨🇭 SUISSE / LAUSANNE
+    ===================================================== */
+
+    {
+        name: "Psykokwak",
+        id: 54,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "0,8 m",
+        weight: "19,6 kg",
+        lat: 46.5197,
+        lon: 6.6323,
+        special: true
+    },
+
+    {
+        name: "Pikachu",
+        id: 25,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "0,4 m",
+        weight: "6 kg",
+        lat: 46.5205,
+        lon: 6.6350
+    },
+
+    {
+        name: "Rattata",
+        id: 19,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "3,5 kg",
+        lat: 46.5180,
+        lon: 6.6300
+    },
+
+    {
+        name: "Rattata",
+        id: 19,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "3,5 kg",
+        lat: 46.5174,
+        lon: 6.6330
+    },
+
+    {
+        name: "Rattatac",
+        id: 20,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,7 m",
+        weight: "18,5 kg",
+        lat: 46.5190,
+        lon: 6.6370
+    },
+
+
+    /* =====================================================
+       🇫🇷 FRANCE
+    ===================================================== */
+
+    {
+        name: "Goupix",
+        id: 37,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "0,6 m",
+        weight: "9,9 kg",
+        lat: 48.8566,
+        lon: 2.3522
+    },
+
+    {
+        name: "Salamèche",
+        id: 4,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "0,6 m",
+        weight: "8,5 kg",
+        lat: 48.8570,
+        lon: 2.3540
+    },
+
+    {
+        name: "Rattata",
+        id: 19,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "3,5 kg",
+        lat: 48.8568,
+        lon: 2.3500
+    },
+
+    {
+        name: "Rattata",
+        id: 19,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "3,5 kg",
+        lat: 48.8580,
+        lon: 2.3515
+    },
+
+    {
+        name: "Rattatac",
+        id: 20,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,7 m",
+        weight: "18,5 kg",
+        lat: 48.8590,
+        lon: 2.3530
+    },
+
+    {
+        name: "Abra",
+        id: 63,
+        gen: 1,
+        type1: "Psy",
+        type2: null,
+        height: "0,9 m",
+        weight: "19,5 kg",
+        lat: 43.2965,
+        lon: 5.3698
+    },
+
+    {
+        name: "Ponyta",
+        id: 77,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "1 m",
+        weight: "30 kg",
+        lat: 45.7640,
+        lon: 4.8357
+    },
+
+
+    /* =====================================================
+       🇮🇹 ITALIE
+    ===================================================== */
+
+    {
+        name: "Racaillou",
+        id: 74,
+        gen: 1,
+        type1: "Roche",
+        type2: "Sol",
+        height: "0,4 m",
+        weight: "20 kg",
+        lat: 45.4642,
+        lon: 9.1900
+    },
+
+    {
+        name: "Onix",
+        id: 95,
+        gen: 1,
+        type1: "Roche",
+        type2: "Sol",
+        height: "8,8 m",
+        weight: "210 kg",
+        lat: 46.0569,
+        lon: 14.5058
+    },
+
+
+    /* =====================================================
+       🇪🇸 ESPAGNE
+    ===================================================== */
+
+    {
+        name: "Caninos",
+        id: 58,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "0,7 m",
+        weight: "19 kg",
+        lat: 40.4168,
+        lon: -3.7038
+    },
+
+    {
+        name: "Tauros",
+        id: 128,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "1,4 m",
+        weight: "88,4 kg",
+        lat: 37.3891,
+        lon: -5.9845
+    },
+
+
+    /* =====================================================
+       🇬🇧 ROYAUME-UNI
+    ===================================================== */
+
+    {
+        name: "Piafabec",
+        id: 21,
+        gen: 1,
+        type1: "Normal",
+        type2: "Vol",
+        height: "0,3 m",
+        weight: "2 kg",
+        lat: 51.5074,
+        lon: -0.1278
+    },
+
+    {
+        name: "Mimitoss",
+        id: 48,
+        gen: 1,
+        type1: "Insecte",
+        type2: "Poison",
+        height: "1 m",
+        weight: "30 kg",
+        lat: 53.4808,
+        lon: -2.2426
+    },
+
+
+    /* =====================================================
+       🇩🇪 ALLEMAGNE
+    ===================================================== */
+
+    {
+        name: "Voltali",
+        id: 135,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "0,8 m",
+        weight: "24,5 kg",
+        lat: 52.5200,
+        lon: 13.4050
+    },
+
+    {
+        name: "Voltorbe",
+        id: 100,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "0,5 m",
+        weight: "10,4 kg",
+        lat: 48.1351,
+        lon: 11.5820
+    },
+
+
+    /* =====================================================
+       🇮🇸 ISLANDE
+    ===================================================== */
+
+    {
+        name: "Marcacrin",
+        id: 220,
+        gen: 2,
+        type1: "Glace",
+        type2: "Sol",
+        height: "0,4 m",
+        weight: "6,5 kg",
+        lat: 64.1466,
+        lon: -21.9426
+    },
+
+    {
+        name: "Cadoizo",
+        id: 225,
+        gen: 2,
+        type1: "Glace",
+        type2: "Vol",
+        height: "0,9 m",
+        weight: "16 kg",
+        lat: 65.2736,
+        lon: -19.0186
+    },
+
+
+    /* =====================================================
+       🇯🇵 JAPON
+    ===================================================== */
+
+    {
+        name: "Pikachu",
+        id: 25,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "0,4 m",
+        weight: "6 kg",
+        lat: 35.6762,
+        lon: 139.6503
+    },
+
+    {
+        name: "Férosinge",
+        id: 56,
+        gen: 1,
+        type1: "Combat",
+        type2: null,
+        height: "0,5 m",
+        weight: "28 kg",
+        lat: 34.6937,
+        lon: 135.5023
+    },
+
+    {
+        name: "Magicarpe",
+        id: 129,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "0,9 m",
+        weight: "10 kg",
+        lat: 35.0116,
+        lon: 135.7681
+    },
+
+    {
+        name: "Héricendre",
+        id: 155,
+        gen: 2,
+        type1: "Feu",
+        type2: null,
+        height: "0,5 m",
+        weight: "7,9 kg",
+        lat: 36.2048,
+        lon: 138.2529
+    },
+
+    {
+        name: "Germignon",
+        id: 152,
+        gen: 2,
+        type1: "Plante",
+        type2: null,
+        height: "0,9 m",
+        weight: "6,4 kg",
+        lat: 34.3853,
+        lon: 132.4553
+    },
+
+
+    /* =====================================================
+       🇨🇳 CHINE
+    ===================================================== */
+
+    {
+        name: "Dracaufeu",
+        id: 6,
+        gen: 1,
+        type1: "Feu",
+        type2: "Vol",
+        height: "1,7 m",
+        weight: "90,5 kg",
+        lat: 31.2304,
+        lon: 121.4737
+    },
+
+    {
+        name: "Sabelette",
+        id: 27,
+        gen: 1,
+        type1: "Sol",
+        type2: null,
+        height: "0,6 m",
+        weight: "12 kg",
+        lat: 29.5630,
+        lon: 106.5516
+    },
+
+
+    /* =====================================================
+       🇮🇳 INDE
+    ===================================================== */
+
+    {
+        name: "Abo",
+        id: 23,
+        gen: 1,
+        type1: "Poison",
+        type2: null,
+        height: "2 m",
+        weight: "6,9 kg",
+        lat: 28.6139,
+        lon: 77.2090
+    },
+
+    {
+        name: "Mystherbe",
+        id: 43,
+        gen: 1,
+        type1: "Plante",
+        type2: "Poison",
+        height: "0,5 m",
+        weight: "5,4 kg",
+        lat: 19.0760,
+        lon: 72.8777
+    },
+
+    {
+        name: "Ramoloss",
+        id: 79,
+        gen: 1,
+        type1: "Eau",
+        type2: "Psy",
+        height: "1,2 m",
+        weight: "36 kg",
+        lat: 9.9312,
+        lon: 76.2673
+    },
+
+
+    /* =====================================================
+       🇹🇭 THAÏLANDE
+    ===================================================== */
+
+    {
+        name: "Paras",
+        id: 46,
+        gen: 1,
+        type1: "Insecte",
+        type2: "Plante",
+        height: "0,3 m",
+        weight: "5,5 kg",
+        lat: 13.7563,
+        lon: 100.5018
+    },
+
+    {
+        name: "Chenipan",
+        id: 10,
+        gen: 1,
+        type1: "Insecte",
+        type2: null,
+        height: "0,3 m",
+        weight: "2,9 kg",
+        lat: 18.7883,
+        lon: 98.9853
+    },
+
+
+    /* =====================================================
+       🇮🇩 INDONÉSIE
+    ===================================================== */
+
+    {
+        name: "Amonita",
+        id: 138,
+        gen: 1,
+        type1: "Roche",
+        type2: "Eau",
+        height: "0,4 m",
+        weight: "7,5 kg",
+        lat: -8.3405,
+        lon: 115.0920
+    },
+
+    {
+        name: "Paras",
+        id: 46,
+        gen: 1,
+        type1: "Insecte",
+        type2: "Plante",
+        height: "0,3 m",
+        weight: "5,5 kg",
+        lat: -6.2088,
+        lon: 106.8456
+    },
+
+
+    /* =====================================================
+       🇦🇺 AUSTRALIE
+    ===================================================== */
+
+    {
+        name: "Kangourex",
+        id: 115,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "2,2 m",
+        weight: "80 kg",
+        lat: -33.8688,
+        lon: 151.2093
+    },
+
+    {
+        name: "Carapuce",
+        id: 7,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "0,5 m",
+        weight: "9 kg",
+        lat: -27.4698,
+        lon: 153.0251
+    },
+
+    {
+        name: "Scarabrute",
+        id: 127,
+        gen: 1,
+        type1: "Insecte",
+        type2: null,
+        height: "1,5 m",
+        weight: "55 kg",
+        lat: -16.9186,
+        lon: 145.7781
+    },
+
+
+    /* =====================================================
+       🇳🇿 NOUVELLE-ZÉLANDE
+    ===================================================== */
+
+    {
+        name: "Roucool",
+        id: 16,
+        gen: 1,
+        type1: "Normal",
+        type2: "Vol",
+        height: "0,3 m",
+        weight: "1,8 kg",
+        lat: -36.8509,
+        lon: 174.7645
+    },
+
+    {
+        name: "Marill",
+        id: 183,
+        gen: 2,
+        type1: "Eau",
+        type2: "Fée",
+        height: "0,4 m",
+        weight: "8,5 kg",
+        lat: -43.5321,
+        lon: 172.6362
+    },
+
+
+    /* =====================================================
+       🇧🇷 BRÉSIL
+    ===================================================== */
+
+    {
+        name: "Bulbizarre",
+        id: 1,
+        gen: 1,
+        type1: "Plante",
+        type2: "Poison",
+        height: "0,7 m",
+        weight: "6,9 kg",
+        lat: -23.5505,
+        lon: -46.6333
+    },
+
+    {
+        name: "Tropius",
+        id: 357,
+        gen: 3,
+        type1: "Plante",
+        type2: "Vol",
+        height: "2 m",
+        weight: "100 kg",
+        lat: -3.4653,
+        lon: -62.2159
+    },
+
+    {
+        name: "Psykokwak",
+        id: 54,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "0,8 m",
+        weight: "19,6 kg",
+        lat: -2.5,
+        lon: -60.0
+    },
+
+
+    /* =====================================================
+       🇦🇷 ARGENTINE
+    ===================================================== */
+
+    {
+        name: "Rhinocorne",
+        id: 111,
+        gen: 1,
+        type1: "Sol",
+        type2: "Roche",
+        height: "1 m",
+        weight: "115 kg",
+        lat: -34.6037,
+        lon: -58.3816
+    },
+
+    {
+        name: "Feunard",
+        id: 38,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "1,1 m",
+        weight: "19,9 kg",
+        lat: -31.4201,
+        lon: -64.1888
+    },
+
+
+    /* =====================================================
+       🇨🇱 CHILI
+    ===================================================== */
+
+    {
+        name: "Évoli",
+        id: 133,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "6,5 kg",
+        lat: -33.4489,
+        lon: -70.6693
+    },
+
+
+    /* =====================================================
+       🇺🇸 ÉTATS-UNIS
+    ===================================================== */
+
+    {
+        name: "Évoli",
+        id: 133,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "6,5 kg",
+        lat: 40.7128,
+        lon: -74.0060
+    },
+
+    {
+        name: "Carapuce",
+        id: 7,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "0,5 m",
+        weight: "9 kg",
+        lat: 25.7617,
+        lon: -80.1918
+    },
+
+    {
+        name: "Tortank",
+        id: 9,
+        gen: 1,
+        type1: "Eau",
+        type2: null,
+        height: "1,6 m",
+        weight: "85,5 kg",
+        lat: 25.7800,
+        lon: -80.1900
+    },
+
+    {
+        name: "Pikachu",
+        id: 25,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "0,4 m",
+        weight: "6 kg",
+        lat: 34.0522,
+        lon: -118.2437
+    },
+
+
+    /* =====================================================
+       🇨🇦 CANADA
+    ===================================================== */
+
+    {
+        name: "Marcacrin",
+        id: 220,
+        gen: 2,
+        type1: "Glace",
+        type2: "Sol",
+        height: "0,4 m",
+        weight: "6,5 kg",
+        lat: 56.1304,
+        lon: -106.3468
+    },
+
+    {
+        name: "Cerfrousse",
+        id: 234,
+        gen: 2,
+        type1: "Normal",
+        type2: null,
+        height: "1,4 m",
+        weight: "71,2 kg",
+        lat: 53.5461,
+        lon: -113.4938
+    },
+
+
+    /* =====================================================
+       🇲🇽 MEXIQUE
+    ===================================================== */
+
+    {
+        name: "Salamèche",
+        id: 4,
+        gen: 1,
+        type1: "Feu",
+        type2: null,
+        height: "0,6 m",
+        weight: "8,5 kg",
+        lat: 19.4326,
+        lon: -99.1332
+    },
+
+    {
+        name: "Rattata",
+        id: 19,
+        gen: 1,
+        type1: "Normal",
+        type2: null,
+        height: "0,3 m",
+        weight: "3,5 kg",
+        lat: 19.4340,
+        lon: -99.1350
+    },
+
+
+    /* =====================================================
+       🇿🇦 AFRIQUE DU SUD
+    ===================================================== */
+
+    {
+        name: "Héricendre",
+        id: 155,
+        gen: 2,
+        type1: "Feu",
+        type2: null,
+        height: "0,5 m",
+        weight: "7,9 kg",
+        lat: -30.5595,
+        lon: 22.9375
+    },
+
+    {
+        name: "Girafarig",
+        id: 203,
+        gen: 2,
+        type1: "Normal",
+        type2: "Psy",
+        height: "1,5 m",
+        weight: "41,5 kg",
+        lat: -26.2041,
+        lon: 28.0473
+    },
+
+
+    /* =====================================================
+       🇪🇬 ÉGYPTE
+    ===================================================== */
+
+    {
+        name: "Sabelette",
+        id: 27,
+        gen: 1,
+        type1: "Sol",
+        type2: null,
+        height: "0,6 m",
+        weight: "12 kg",
+        lat: 30.0444,
+        lon: 31.2357
+    },
+
+    {
+        name: "Taupiqueur",
+        id: 50,
+        gen: 1,
+        type1: "Sol",
+        type2: null,
+        height: "0,2 m",
+        weight: "0,8 kg",
+        lat: 29.9792,
+        lon: 31.1342
+    },
+
+
+    /* =====================================================
+       🇰🇪 KENYA
+    ===================================================== */
+
+    {
+        name: "Élektek",
+        id: 125,
+        gen: 1,
+        type1: "Électrik",
+        type2: null,
+        height: "1,1 m",
+        weight: "30 kg",
+        lat: -1.2921,
+        lon: 36.8219
+    },
+
+    {
+        name: "Herbizarre",
+        id: 2,
+        gen: 1,
+        type1: "Plante",
+        type2: "Poison",
+        height: "1 m",
+        weight: "13 kg",
+        lat: -0.0917,
+        lon: 34.7680
+    },
+
+
+    /* =====================================================
+       🇲🇬 MADAGASCAR
+    ===================================================== */
+
+    {
+        name: "Aéromite",
+        id: 49,
+        gen: 1,
+        type1: "Insecte",
+        type2: "Poison",
+        height: "1,5 m",
+        weight: "12,5 kg",
+        lat: -18.8792,
+        lon: 47.5079
+    },
+
+
+    /* =====================================================
+       🇷🇺 RUSSIE / SIBÉRIE
+    ===================================================== */
+
+    {
+        name: "Cochignon",
+        id: 221,
+        gen: 2,
+        type1: "Glace",
+        type2: "Sol",
+        height: "1,1 m",
+        weight: "58 kg",
+        lat: 55.7558,
+        lon: 37.6173
+    },
+
+    {
+        name: "Lamantine",
+        id: 87,
+        gen: 1,
+        type1: "Eau",
+        type2: "Glace",
+        height: "1,7 m",
+        weight: "120 kg",
+        lat: 61.5240,
+        lon: 105.3188
+    }
+
+];
+
+
+/* =========================================================
+   TYPES CSS
+========================================================= */
+
+function typeClass(type) {
+
+    const map = {
+
+        "Feu": "type-feu",
+
+        "Eau": "type-eau",
+
+        "Plante": "type-plante",
+
+        "Électrik": "type-electrik",
+
+        "Normal": "type-normal",
+
+        "Vol": "type-vol",
+
+        "Psy": "type-psy",
+
+        "Glace": "type-glace",
+
+        "Sol": "type-sol",
+
+        "Roche": "type-roche",
+
+        "Poison": "type-poison",
+
+        "Insecte": "type-insecte",
+
+        "Combat": "type-combat",
+
+        "Spectre": "type-spectre",
+
+        "Acier": "type-acier",
+
+        "Ténèbres": "type-tenebres",
+
+        "Dragon": "type-dragon",
+
+        "Fée": "type-fee"
+
+    };
+
+
+    return map[type] || "type-normal";
+}
+
+
+/* =========================================================
+   AJOUTER LES POKÉMON À LA CARTE
+========================================================= */
+
+pokemonLocations.forEach(
+    pokemon => {
+
+
+        const image =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" +
+            pokemon.id +
+            ".png";
+
+
+        const markerHTML = `
+
+            <div
+                class="
+                    pokemon-marker
+                    ${pokemon.special ? "special" : ""}
+                "
+            >
+
+                <img
+                    src="${image}"
+                    alt="${pokemon.name}"
+                >
+
+            </div>
+
+        `;
+
+
+        const icon =
+            L.divIcon({
+
+                html: markerHTML,
+
+                className: "",
+
+                iconSize:
+                    pokemon.special
+                        ? [76,76]
+                        : [52,52],
+
+                iconAnchor:
+                    pokemon.special
+                        ? [38,38]
+                        : [26,26],
+
+                popupAnchor:
+                    [0,-25]
+            });
+
+
+        const marker =
+            L.marker(
+                [
+                    pokemon.lat,
+                    pokemon.lon
+                ],
+                {
+                    icon: icon
+                }
+            )
+            .addTo(
+                pokemonMap
+            );
+
+
+        const typesHTML = `
+
+            <span
+                class="
+                    pokemon-type
+                    ${typeClass(pokemon.type1)}
+                "
+            >
+                ${pokemon.type1}
+            </span>
+
+            ${
+                pokemon.type2
+                    ? `
+                        <span
+                            class="
+                                pokemon-type
+                                ${typeClass(pokemon.type2)}
+                            "
+                        >
+                            ${pokemon.type2}
+                        </span>
+                    `
+                    : ""
+            }
+
+        `;
+
+
+        marker.bindPopup(`
+
+            <div class="pokemon-popup">
+
+                <img
+                    src="${image}"
+                    alt="${pokemon.name}"
+                >
+
+                <h2>
+                    ${pokemon.name}
+                </h2>
+
+                <div>
+                    ${typesHTML}
+                </div>
+
+                <p>
+                    📏
+                    <strong>Taille :</strong>
+                    ${pokemon.height}
+                </p>
+
+                <p>
+                    ⚖️
+                    <strong>Poids :</strong>
+                    ${pokemon.weight}
+                </p>
+
+                <p>
+                    🧬
+                    Génération ${pokemon.gen}
+                </p>
+
+                ${
+                    pokemon.special
+                        ? `
+                            <p>
+                                ⭐
+                                <strong>
+                                    Pokémon spécial de Lausanne !
+                                </strong>
+                            </p>
+                        `
+                        : ""
+                }
+
+            </div>
+
+        `);
+
+    }
+);
+
+
+/* =========================================================
+   DÉMARRAGE MÉTÉO
+========================================================= */
+
+loadWeather();
+
+</script>
+
+
+</body>
+
+</html>
